@@ -1,49 +1,42 @@
 package threads.sync;
 
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class SynchronizedBankAccountDemo {
     public static void main(String[] args) {
         SynchronizedBankAccount account = new SynchronizedBankAccount();
         Random random = new Random();
-        Thread[] deposits = new Thread[2000];
-        Thread[] withdraws = new Thread[2000];
+        Thread[] threads = new Thread[200_000];
+        AtomicInteger finalSum = new AtomicInteger(1000);
 
-//        for (int i = 0; i < deposits.length; i++) {
-            Thread deposit = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    for (int i = 0; i < 1000; i++) {
-                        int sum = random.nextInt(100, 1000);
-
-                        account.deposit(sum);
-                    }
+        for (int i = 0; i < threads.length; i++) {
+            threads[i] = new Thread(() -> {
+                if (random.nextBoolean()) {
+                    int sum = random.nextInt(100, 200);
+                    finalSum.addAndGet(sum);
+                    account.deposit(sum);
+                }
+                else {
+                    int out = random.nextInt(50, 100);
+                    finalSum.addAndGet(-out);
+                    account.withdraw(out);
                 }
             });
 
-            Thread withdraw = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    for (int i = 0; i < 1000; i++) {
-                        int out = random.nextInt(10, 100);
-
-                        account.withdraw(out);
-                    }
-                }
-            });
-
-            deposit.start();
-            withdraw.start();
+            threads[i].start();
+        }
             // TODO: Создайте и запустите потоки, выполняющие случайные операции со счетом
 
-            try {
-                deposit.join();
-                withdraw.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+        try {
+            for (Thread thread : threads) {
+                thread.join();
             }
-//        }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
+        System.out.println("Ожидаемый баланс: " + finalSum);
         System.out.println("Финальный баланс: " + account.getBalance());
     }
 }
