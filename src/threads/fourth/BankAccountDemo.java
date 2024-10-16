@@ -7,7 +7,7 @@ public class BankAccountDemo {
     public static void main(String[] args) {
         BankAccount account = new BankAccount();
         Random random = new Random();
-        Thread[] threads = new Thread[200_000];
+        Thread[] threads = new Thread[50_000];
         AtomicInteger finalSum = new AtomicInteger(1000);
 
         for (int i = 0; i < threads.length; i++) {
