@@ -2,46 +2,62 @@ package threads.buffer;
 
 public class BoundedBuffer<T> {
     private T[] array;
-    private int count = 0;
+    private volatile int count = 0;
     private int length;
+    private T in;
+    private T out;
 
     public BoundedBuffer(int length) {
         this.length = length;
         this.array = (T[]) new Object[length];
+        this.in = null;
+        this.out = null;
     }
 
-    public void put(T object) {
-        if (count == length) {
+    public BoundedBuffer() {
+        this(5);
+    }
+
+    public synchronized void put(T object) {
+        while (count == length) {
             try {
                 wait();
             }
             catch (InterruptedException e) {
-                e.printStackTrace();
+                System.err.println(e.getMessage());
             }
         }
 
-        array[count++] = object;
-        if (count != 0) {
-            notifyAll();
-        }
+        in = object;
+        array[count++] = in;
+        notifyAll();
+
+        System.out.println("Добавлен: " + count);
     }
 
-    public T take() {
-        if (count == 0) {
+    public synchronized void take() {
+        while (count == 0) {
             try {
                 wait();
             }
             catch (InterruptedException e) {
-                e.printStackTrace();
+                System.err.println(e.getMessage());
             }
         }
 
+        out = array[--count];
         array[count] = null;
+        notifyAll();
 
-        if (count == length) {
-            notifyAll();
-        }
+        System.out.println("Удален: " + count);
+        //return out;
+    }
 
-        return array[count--];
+//    public synchronized void setCount(int amount) {
+//        this.count += amount;
+//    }
+
+    public int getBufferCount() {
+        return this.count;
     }
 }
