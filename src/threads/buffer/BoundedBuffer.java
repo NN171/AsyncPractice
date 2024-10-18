@@ -10,7 +10,7 @@ public class BoundedBuffer<T> {
     private CountDownLatch end;
 
     @SuppressWarnings("unchecked")
-    public BoundedBuffer(int size,  CountDownLatch end) {
+    public BoundedBuffer(int size, CountDownLatch end) {
         this.buffer = (T[]) new Object[size];
         this.end = end;
     }
@@ -28,12 +28,12 @@ public class BoundedBuffer<T> {
         buffer[in++] = item;
         in %= buffer.length;
         count++;
-        notify();
 
         System.out.println("Добавлен: " + this.count + " " + item);
+        notifyAll();
     }
 
-    public synchronized T take() {
+    public synchronized void take() {
         while (count == 0) {
             try {
                 wait();
@@ -48,8 +48,8 @@ public class BoundedBuffer<T> {
         T element = buffer[out];
         count--;
         buffer[out++] = null;
-        notify();
-
-        return element;
+        System.out.println(element);
+        notifyAll();
+//        return element;
     }
 }
