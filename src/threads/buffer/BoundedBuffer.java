@@ -1,25 +1,22 @@
 package threads.buffer;
 
 public class BoundedBuffer<T> {
-    private T[] array;
-    private volatile int count = 0;
-    private int length;
-    private T in;
-    private T out;
+    private final T[] buffer;
+    private int count = 0;
+    private int in = 0;
+    private int out = 0;
 
-    public BoundedBuffer(int length) {
-        this.length = length;
-        this.array = (T[]) new Object[length];
-        this.in = null;
-        this.out = null;
+    @SuppressWarnings("unchecked")
+    public BoundedBuffer(int size) {
+        this.buffer = (T[]) new Object[size];
     }
 
     public BoundedBuffer() {
         this(5);
     }
 
-    public synchronized void put(T object) {
-        while (count == length) {
+    public synchronized void put(T item) {
+        while (count == buffer.length) {
             try {
                 wait();
             }
@@ -28,11 +25,12 @@ public class BoundedBuffer<T> {
             }
         }
 
-        in = object;
-        array[count++] = in;
+        buffer[in++] = item;
+        in %= buffer.length;
+        count++;
         notifyAll();
 
-        System.out.println("Добавлен: " + count);
+        System.out.println("Добавлен: " + getBufferCount());
     }
 
     public synchronized void take() {
@@ -45,11 +43,12 @@ public class BoundedBuffer<T> {
             }
         }
 
-        out = array[--count];
-        array[count] = null;
+
+        count--;
+        out %= buffer.length;
         notifyAll();
 
-        System.out.println("Удален: " + count);
+        System.out.println("Удален: " + buffer[out++]);
         //return out;
     }
 

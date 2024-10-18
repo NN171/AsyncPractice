@@ -5,29 +5,29 @@ import java.util.Random;
 public class BoundedBufferTest {
     public static void main(String[] args) {
 
-        BoundedBuffer<Integer> buffer = new BoundedBuffer<>(3);
-        Thread[] threads = new Thread[20];
+        BoundedBuffer<Integer> buffer = new BoundedBuffer<>();
+        Thread[] putThreads = new Thread[100000];
+        Thread[] takeThreads = new Thread[100000]; // TODO add CountDownLatch
         Random random = new Random();
 
-        for (int i = 0; i < threads.length; i++) {
+        for (int i = 0; i < putThreads.length; i++) {
 
-            threads[i] = new Thread(() -> {
-                if (random.nextBoolean()) {
-                    buffer.put(random.nextInt(1, 10));
-                }
-                else {
-                    buffer.take();
-                }
-            });
-        }
+            putThreads[i] = new Thread(() ->
+                    buffer.put(random.nextInt(1, 10))
+            );
 
-        for (Thread thread : threads) {
-            thread.start();
+            takeThreads[i] = new Thread(() ->
+                    buffer.take()
+            );
+
+            putThreads[i].start();
+            takeThreads[i].start();
         }
 
         try {
-            for (Thread thread : threads) {
-                thread.join();
+            for (int i = 0; i < putThreads.length; i++) {
+                putThreads[i].join();
+                takeThreads[i].join();
             }
         }
         catch (InterruptedException e) {
