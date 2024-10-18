@@ -1,18 +1,18 @@
 package threads.buffer;
 
+import java.util.concurrent.CountDownLatch;
+
 public class BoundedBuffer<T> {
     private final T[] buffer;
     private int count = 0;
     private int in = 0;
     private int out = 0;
+    private CountDownLatch end;
 
     @SuppressWarnings("unchecked")
-    public BoundedBuffer(int size) {
+    public BoundedBuffer(int size,  CountDownLatch end) {
         this.buffer = (T[]) new Object[size];
-    }
-
-    public BoundedBuffer() {
-        this(5);
+        this.end = end;
     }
 
     public synchronized void put(T item) {
@@ -28,12 +28,12 @@ public class BoundedBuffer<T> {
         buffer[in++] = item;
         in %= buffer.length;
         count++;
-        notifyAll();
+        notify();
 
-        System.out.println("Добавлен: " + getBufferCount());
+        System.out.println("Добавлен: " + this.count + " " + item);
     }
 
-    public synchronized void take() {
+    public synchronized T take() {
         while (count == 0) {
             try {
                 wait();
@@ -44,19 +44,12 @@ public class BoundedBuffer<T> {
         }
 
 
-        count--;
         out %= buffer.length;
-        notifyAll();
+        T element = buffer[out];
+        count--;
+        buffer[out++] = null;
+        notify();
 
-        System.out.println("Удален: " + buffer[out++]);
-        //return out;
-    }
-
-//    public synchronized void setCount(int amount) {
-//        this.count += amount;
-//    }
-
-    public int getBufferCount() {
-        return this.count;
+        return element;
     }
 }

@@ -1,39 +1,22 @@
 package threads.buffer;
 
-import java.util.Random;
+import java.util.concurrent.CountDownLatch;
 
 public class BoundedBufferTest {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
 
-        BoundedBuffer<Integer> buffer = new BoundedBuffer<>();
-        Thread[] putThreads = new Thread[100000];
-        Thread[] takeThreads = new Thread[100000]; // TODO add CountDownLatch
-        Random random = new Random();
+        int length = 10;
+        CountDownLatch end = new CountDownLatch(length); //TODO add countdownLatch for threads sequence
+        BoundedBuffer<Integer> buffer = new BoundedBuffer<>(10, end);
 
-        for (int i = 0; i < putThreads.length; i++) {
+        for (int i = 0; i < length; i++) {
 
-            putThreads[i] = new Thread(() ->
-                    buffer.put(random.nextInt(1, 10))
-            );
+            CountDownLatch next = new CountDownLatch(1);
 
-            takeThreads[i] = new Thread(() ->
-                    buffer.take()
-            );
-
-            putThreads[i].start();
-            takeThreads[i].start();
+            new Thread(new TakeThread(buffer, next, end)).start();
+            new Thread(new PutThread(buffer, next, end)).start();
         }
 
-        try {
-            for (int i = 0; i < putThreads.length; i++) {
-                putThreads[i].join();
-                takeThreads[i].join();
-            }
-        }
-        catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        System.out.println(buffer.getBufferCount());
+        end.await();
     }
 }
