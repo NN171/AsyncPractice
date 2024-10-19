@@ -33,7 +33,7 @@ public class BoundedBuffer<T> {
         notifyAll();
     }
 
-    public synchronized void take() {
+    public synchronized T take() {
         while (count == 0) {
             try {
                 wait();
@@ -43,13 +43,12 @@ public class BoundedBuffer<T> {
             }
         }
 
-
-        out %= buffer.length;
         T element = buffer[out];
         count--;
         buffer[out++] = null;
-        System.out.println(element);
+        out %= buffer.length;
         notifyAll();
-//        return element;
+
+        return element;
     }
 }
