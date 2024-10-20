@@ -49,7 +49,7 @@ public class BoundedBuffer<T> {
         return element;
     }
 
-    public synchronized void print(String action, T element, int counter) {
-        System.out.println(action + element + " " + counter);
-    }
+//    public synchronized void print(String action, T element, int counter) {
+//        System.out.println(action + element + " " + counter);
+//    }
 }
